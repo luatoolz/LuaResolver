@@ -1,0 +1,44 @@
+# syntax=docker/dockerfile:1
+# check=skip=JSONArgsRecommended,StageNameCasing
+ARG SOURCE_DATE_EPOCH=0
+ARG LUA_VERSION=${LUA_VERSION:-jit}
+
+FROM alpine AS build
+ARG SOURCE_DATE_EPOCH
+ARG LUA_VERSION
+
+RUN apk update && apk add \
+  ca-certificates curl \
+  build-base gcc git make cmake \
+  lua${LUA_VERSION}-dev lua${LUA_VERSION} \
+	pkgconf
+
+FROM build AS base
+ARG SOURCE_DATE_EPOCH
+ARG LUA_VERSION
+COPY --from=build / /
+
+RUN test "$LUA_VERSION" = "jit" \
+  && apk add lua5.1 lua5.1-dev luarocks5.1 \
+  && ln -s /usr/bin/luarocks-5.1 /usr/bin/luarocks-jit \
+  || apk add luarocks${LUA_VERSION}
+RUN test -f /usr/bin/luarocks || ln -s /usr/bin/luarocks-${LUA_VERSION} /usr/bin/luarocks
+RUN luarocks config --scope system lua_dir /usr
+
+FROM base AS soft
+ARG SOURCE_DATE_EPOCH
+ARG LUA_VERSION
+WORKDIR /src
+COPY --from=base / /
+COPY . /src
+RUN luarocks install --dev luaresolver-scm-0.rockspec
+RUN apk del build-base gcc git make cmake lua-dev && rm -rf /var/cache
+
+FROM scratch
+ARG SOURCE_DATE_EPOCH
+ARG LUA_VERSION
+ENV LUA_VERSION=$LUA_VERSION
+COPY --from=soft / /
+WORKDIR /src
+
+CMD lua-$LUA_VERSION demo.lua

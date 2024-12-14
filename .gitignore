@@ -1,3 +1,5 @@
 server.log
 .buildpath
 .project
+makefile
+*.mk

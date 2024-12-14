@@ -7,8 +7,8 @@ local function main(domain, type)
 		return
 	end
 	
-	local r = Resolver.new({"213.73.91.35"}, 2)
-	r:addServer("85.214.20.141")
+	local r = Resolver.new({"1.1.1.1"}, 2)
+	r:addServer("8.8.8.8")
 	
 	local rec, errmsg = r:resolve(domain, type)
 	if errmsg then
@@ -20,4 +20,4 @@ local function main(domain, type)
 		print(v.name, v.type, v.class, v.content)
 	end
 end
-main(arg[1], arg[2])
+main(arg[1] or 'yandex.ru', arg[2] or '*')
