@@ -41,4 +41,4 @@ ENV LUA_VERSION=$LUA_VERSION
 COPY --from=soft / /
 WORKDIR /src
 
-CMD lua-$LUA_VERSION demo.lua
+CMD lua$LUA_VERSION demo.lua
